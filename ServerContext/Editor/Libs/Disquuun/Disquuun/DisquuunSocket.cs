@@ -2,8 +2,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 
-namespace DisquuunCore
-{
+namespace DisquuunCore {
     public class DisquuunSocket {
 		public readonly string socketId;
 		
@@ -271,12 +270,21 @@ namespace DisquuunCore
 		}
 		
 		private void StartCloseAsync () {
-			var closeEventArgs = new SocketAsyncEventArgs();
-			closeEventArgs.UserToken = socketToken;
-			closeEventArgs.AcceptSocket = socketToken.socket;
-			closeEventArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnClosed);
+			// asyncじゃないことが問題になりそうな気がする。
+
+			// var closeEventArgs = new SocketAsyncEventArgs();
+			// closeEventArgs.UserToken = socketToken;
+			// closeEventArgs.AcceptSocket = socketToken.socket;
+			// closeEventArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnClosed);
 			
 			// if (!socketToken.socket.DisconnectAsync(closeEventArgs)) OnClosed(socketToken.socket, closeEventArgs);
+			
+			try {
+				socketToken.socket.Shutdown(SocketShutdown.Both);
+				socketToken.socket.Dispose();
+			} catch (Exception e) {
+				Disquuun.Log("Dispose:" + e.Message);
+			}
 		}
 		
 		/*
@@ -544,6 +552,8 @@ namespace DisquuunCore
 				try {
 					socketToken.socketState = SocketState.CLOSING;
 					// socketToken.socket.Close();
+					socketToken.socket.Shutdown(SocketShutdown.Both);
+					socketToken.socket.Dispose();
 					socketToken.socketState = SocketState.CLOSED;
 				} catch (Exception e) {
 					Disquuun.Log("Disconnect e:" + e);

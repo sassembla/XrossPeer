@@ -12,9 +12,7 @@ public class ServerInitializer {
  //  	}
   	private static ServerInitializer initializer;
 	
-	public static void Init () {
-		initializer = new ServerInitializer();
-	}
+	public static void Init () {}
 
 	static ServerInitializer () {// called by Unity.
 		initializer = new ServerInitializer();

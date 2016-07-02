@@ -24,13 +24,10 @@ public class DisquuunTests {
 	}
 }
 
-
-
 public partial class Tests {
 	public void RunTests () {
 		var tests = new List<Action<Disquuun>>();
 		
-		for (var i = 0; i < 1; i++) {
 		// basement.
 		tests.Add(_0_0_InitWith2Connection);
 		tests.Add(_0_0_1_WaitOnOpen2Connection);
@@ -123,14 +120,12 @@ public partial class Tests {
 		tests.Add(_8_0_LargeSizeSendThenSmallSizeSendMakeEmitOnSendAfterOnReceived);
 		tests.Add(_8_1_LargeSizeSendThenSmallSizeSendLoopMakeEmitOnSendAfterOnReceived);
 
-		}
-
 
 		try {
 			TestLogger.Log("tests started.", true);
 			
 			var disquuunForResultInfo = new Disquuun(DisquuunTests.TestDisqueHostStr, DisquuunTests.TestDisquePortNum, 10240, 1);
-			WaitUntil(() => (disquuunForResultInfo.State() == Disquuun.ConnectionState.OPENED), 5);
+			WaitUntil("testRunner:", () => (disquuunForResultInfo.State() == Disquuun.ConnectionState.OPENED), 5);
 			
 			foreach (var test in tests) {
 				try {
@@ -144,24 +139,24 @@ public partial class Tests {
 					var info = disquuunForResultInfo.Info().DEPRICATED_Sync();
 					var result = DisquuunDeserializer.Info(info);
 					var restJobCount = result.jobs.registered_jobs;
-					if (restJobCount != 0) TestLogger.Log("test:" + "test.Method" + " rest job:" + restJobCount, true);
-					else TestLogger.Log("test:" + "test.Method" + " passed. no job exists.", true);
+					var methodName = test.Method;
+
+					if (restJobCount != 0) TestLogger.Log("test:" + methodName + " rest job:" + restJobCount, true);
+					else TestLogger.Log("test:" + methodName + " passed. no job exists.", true);
 				} catch (Exception e) {
-					TestLogger.Log("test:" + "test.Method" + " FAILED by exception:" + e);
+					TestLogger.Log("test:" + methodName + " FAILED by exception:" + e);
 				}
 			}
 
 			disquuunForResultInfo.Disconnect(true);
 			TestLogger.Log("tests end.", true);
 		} catch (Exception e) {
-			TestLogger.Log("tests failed:" + e, true);
+			TestLogger.Log("tests failed:" + e.Message, true);
 		}
 	}
 	
 	
-	public void WaitUntil (Func<bool> WaitFor, int timeoutSec) {
-		// System.Diagnostics.StackTrace stack  = new System.Diagnostics.StackTrace(false);
-		var methodName = "stack.GetFrame(1).GetMethod().Name";
+	public void WaitUntil (string methodName, Func<bool> WaitFor, int timeoutSec) {
 		var resetEvent = new ManualResetEvent(false);
 		
 		var waitingThread = new Thread(
@@ -194,18 +189,12 @@ public partial class Tests {
 		resetEvent.WaitOne();
 	}
 	
-	public void Assert (bool condition, string message) {
-		// System.Diagnostics.StackTrace stack  = new System.Diagnostics.StackTrace(false);
-		// var methodName = stack.GetFrame(1).GetMethod().Name;
-		var methodName = "stack.GetFrame(1).GetMethod().Name";
+	public void Assert (string methodName, bool condition, string message) {
 		if (!condition) TestLogger.Log("test:" + methodName + " FAILED:" + message); 
 	}
 	
-	public void Assert (object expected, object actual, string message) {
-		// System.Diagnostics.StackTrace stack  = new System.Diagnostics.StackTrace(false);
-		// var methodName = stack.GetFrame(1).GetMethod().Name;
-		var methodName = "stack.GetFrame(1).GetMethod().Name";
-		if (expected.ToString() != actual.ToString()) TestLogger.Log("test:" + methodName + " FAILED:" + message + " expected:" + expected + " actual:" + actual + " stack:" + "stack"); 
+	public void Assert (string methodName, object expected, object actual, string message) {
+		if (expected.ToString() != actual.ToString()) TestLogger.Log("test:" + methodName + " FAILED:" + message + " expected:" + expected + " actual:" + actual); 
 	}
 }
 
