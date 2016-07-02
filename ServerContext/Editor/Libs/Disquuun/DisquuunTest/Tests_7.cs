@@ -125,7 +125,7 @@ public partial class Tests {
 	public void _7_1_GetJob1000 (Disquuun disquuun) {
 		WaitUntil("_7_1_GetJob1000", () => (disquuun.State() == Disquuun.ConnectionState.OPENED), 5);
 		
-		var addingJobCount = 10000;
+		var addingJobCount = 1000;
 		
 		var connected = false;
 		disquuun = new Disquuun(DisquuunTests.TestDisqueHostStr, DisquuunTests.TestDisquePortNum, 1024, 10,
@@ -141,18 +141,22 @@ public partial class Tests {
 		var r0 = WaitUntil("r0 _7_1_GetJob1000", () => connected, 5);
 		if (!r0) return;
 
+		TestLogger.Log("------------------------------CONNECTED", true);
+
 		var addedCount = 0;
 		
 		var queueId = Guid.NewGuid().ToString();
-		
+		var lockObject = new object();
+
 		for (var i = 0; i < addingJobCount; i++) {
+			TestLogger.Log("------------------------------ADDING i:" + i);
 			disquuun.AddJob(queueId, new byte[10]).Async(
 				(command, data) => {
-					lock (this) addedCount++;
+					lock (lockObject) addedCount++;
 				}
 			);
 		}
-
+		TestLogger.Log("------------------------------ADDING2", true);
 		
 		var r1 = WaitUntil("r1 _7_1_GetJob1000", () => (addedCount == addingJobCount), 10);
 		if (!r1) return;

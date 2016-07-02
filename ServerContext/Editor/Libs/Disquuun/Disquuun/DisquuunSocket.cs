@@ -268,7 +268,8 @@ namespace DisquuunCore {
 			try {
 				socketToken.sendArgs.SetBuffer(data, 0, data.Length);
 			} catch (Exception e) {
-				Disquuun.Log("sendArgs setBuffer count:" + count + " error:" + e);
+				Disquuun.Log("StartReceiveAndSendDataAsync before error,", true);
+				Disquuun.Log("sendArgs setBuffer count:" + count + " error:" + e.Message);
 
 				// renew. potential error is exists and should avoid this error.
 				var endPoint = socketToken.sendArgs.RemoteEndPoint;
@@ -279,7 +280,8 @@ namespace DisquuunCore {
 			}		
 			if (!socketToken.socket.SendAsync(socketToken.sendArgs)) OnSend(socketToken.socket, socketToken.sendArgs);
 			} catch (Exception e1) {
-				Disquuun.Log("StartReceiveAndSendDataAsync count:" + count + " error:" + e1);
+				Disquuun.Log("StartReceiveAndSendDataAsync 2 before error,", true);
+				Disquuun.Log("StartReceiveAndSendDataAsync count:" + count + " error:" + e1.Message);
 			} 
 		}
 		
@@ -297,6 +299,7 @@ namespace DisquuunCore {
 				socketToken.socket.Shutdown(SocketShutdown.Both);
 				socketToken.socket.Dispose();
 			} catch (Exception e) {
+				Disquuun.Log("StartCloseAsync before error,", true);
 				Disquuun.Log("Dispose:" + e.Message);
 			}
 		}
@@ -340,6 +343,7 @@ namespace DisquuunCore {
 		}
 		
 		private void OnSend (object unused, SocketAsyncEventArgs args) {
+			try {
 			switch (args.SocketError) {
 				case SocketError.Success: {
 					var token = args.UserToken as SocketToken;
@@ -399,11 +403,16 @@ namespace DisquuunCore {
 					return;
 				}
 			}
+			} catch (Exception e) {
+				Disquuun.Log("OnSend before error,", true);
+				Disquuun.Log("OnSend error, e:" + e.Message);
+			}
 		}
 
 		
 		
 		private void OnReceived (object unused, SocketAsyncEventArgs args) {
+			try {
 			var token = (SocketToken)args.UserToken;
 			if (args.SocketError != SocketError.Success) { 
 				switch (token.socketState) {
@@ -560,6 +569,10 @@ namespace DisquuunCore {
 			token.receiveArgs.SetBuffer(token.receiveBuffer, token.readableDataLength, receivableCount);
 
 			if (!token.socket.ReceiveAsync(token.receiveArgs)) OnReceived(token.socket, token.receiveArgs);
+			} catch (Exception e) {
+				Disquuun.Log("OnReceived before error,", true);
+				Disquuun.Log("OnReceived e:" + e.Message);
+			}
 		}
 		
 		public void Disconnect (bool force=false) {
@@ -571,7 +584,8 @@ namespace DisquuunCore {
 					socketToken.socket.Dispose();
 					socketToken.socketState = SocketState.CLOSED;
 				} catch (Exception e) {
-					Disquuun.Log("Disconnect e:" + e);
+					Disquuun.Log("Disconnect before error,", true);
+					Disquuun.Log("Disconnect e:" + e.Message);
 				}
 				return;
 			}
@@ -611,7 +625,7 @@ namespace DisquuunCore {
 			return socket.DEPRECATED_Sync(input.command, input.data);
 		}
 		
-		public static void Async (this DisquuunInput input, Action<DisqueCommand, DisquuunResult[]> Callback) {	
+		public static void Async (this DisquuunInput input, Action<DisqueCommand, DisquuunResult[]> Callback) {
 			var socket = input.socket;
 			socket.Async(
 				input.command, 

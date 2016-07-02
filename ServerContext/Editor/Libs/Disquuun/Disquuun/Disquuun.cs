@@ -167,6 +167,7 @@ namespace DisquuunCore {
 		private int newSocketCount = 0;
 
 		private DisquuunSocket ChooseAvailableSocket () {
+			try {
 			lock (lockObject) {
 				for (var i = 0; i < socketPool.Length; i++) {
 					var socket = socketPool[i];
@@ -178,6 +179,11 @@ namespace DisquuunCore {
 				
 				newSocketCount++;
 				return new DisquuunSocket(endPoint, bufferSize, OnSocketConnectionFailed, newSocketCount);
+			}
+			} catch (Exception e) {
+				Disquuun.Log("ChooseAvailableSocket before error,", true);
+				Disquuun.Log("ChooseAvailableSocket e:" + e.Message, true);
+				throw e;
 			}
 		}
 		

@@ -29,7 +29,7 @@ public partial class Tests {
 		var tests = new List<Action<Disquuun>>();
 		
 		// basement.
-		tests.Add(_0_0_InitWith2Connection);
+		// tests.Add(_0_0_InitWith2Connection);
 		// tests.Add(_0_0_1_WaitOnOpen2Connection);
 		// tests.Add(_0_0_2_ReadmeSampleSync);
 		// tests.Add(_0_0_3_ReadmeSampleAsync);
@@ -131,7 +131,6 @@ public partial class Tests {
 				var methodName = test.GetType();
 
 				try {
-					TestLogger.Log("tests before.", true);
 					var disquuun = new Disquuun(DisquuunTests.TestDisqueHostStr, DisquuunTests.TestDisquePortNum, 2020008, 2);// this buffer size is just for 100byte job x 10000 then receive 1 GetJob(count 1000).
 					test(disquuun);
 					if (disquuun != null) {
