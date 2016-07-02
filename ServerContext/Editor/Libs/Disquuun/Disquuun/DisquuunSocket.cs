@@ -80,35 +80,38 @@ namespace DisquuunCore {
 				this.receiveArgs.SetBuffer(receiveBuffer, 0, receiveBuffer.Length);
 			}
 		}
-		
-		public DisquuunSocket (IPEndPoint endPoint, long bufferSize, Action<DisquuunSocket, string, Exception> SocketClosedAct) {
+		public readonly int count;
+		public DisquuunSocket (IPEndPoint endPoint, long bufferSize, Action<DisquuunSocket, string, Exception> SocketClosedAct, int count) {
+			this.count = count;
+			Disquuun.Log("new disposable:" + count);
 			this.socketId = Guid.NewGuid().ToString();
 			
 			this.SocketClosed = SocketClosedAct;
 
 			try {
-				Disquuun.Log("a");
+				// Disquuun.Log("a");
 				var clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-				Disquuun.Log("b-1");
+				// Disquuun.Log("b-1");
 				clientSocket.NoDelay = true;
-				Disquuun.Log("b");
+				// Disquuun.Log("b");
 				var connectArgs = new SocketAsyncEventArgs();
 				connectArgs.RemoteEndPoint = endPoint;
-				Disquuun.Log("c");
+				// Disquuun.Log("c");
 				var sendArgs = new SocketAsyncEventArgs();
 				sendArgs.RemoteEndPoint = endPoint;
 				sendArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnSend);
-				Disquuun.Log("d");
+				// Disquuun.Log("d");
 				var receiveArgs = new SocketAsyncEventArgs();
 				receiveArgs.RemoteEndPoint = endPoint;
 				receiveArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnReceived);
-				Disquuun.Log("e");	
+				// Disquuun.Log("e");	
 				socketToken = new SocketToken(clientSocket, bufferSize, connectArgs, sendArgs, receiveArgs);
 				socketToken.socketState = SocketState.DISPOSABLE_READY;
-				Disquuun.Log("f");
+				// Disquuun.Log("f");
+
 				// not start connecting yet.
 			} catch (Exception e) {
-				SocketClosed(this, "failed to create additioal socket.", e);
+				SocketClosed(this, "failed to create additioal socket. count:" + count, e);
 			}
 		}
 		
@@ -157,6 +160,8 @@ namespace DisquuunCore {
 			DEPRECATED. only use for testing.
 		*/
 		public DisquuunResult[] DEPRECATED_Sync (DisqueCommand command, byte[] data) {
+			// Disquuun.Log("DEPRECATED_Sync socket:" + socketToken.socket);
+
 			socketToken.socket.Send(data);
 			
 			var currentLength = 0;
@@ -191,6 +196,7 @@ namespace DisquuunCore {
 			}
 			
 			socketToken.socketState = SocketState.OPENED;
+
 			return scanResult.data;
 		}
 		
@@ -248,6 +254,7 @@ namespace DisquuunCore {
 			default pooled socket + disposable socket shared 
 		*/
 		private void StartReceiveAndSendDataAsync (DisqueCommand command, byte[] data, Func<DisqueCommand, DisquuunResult[], bool> Callback) {
+			try {
 			// ready for receive.
 			socketToken.readableDataLength = 0;
 
@@ -261,7 +268,7 @@ namespace DisquuunCore {
 			try {
 				socketToken.sendArgs.SetBuffer(data, 0, data.Length);
 			} catch (Exception e) {
-				Disquuun.Log("sendArgs setBuffer error:" + e);
+				Disquuun.Log("sendArgs setBuffer count:" + count + " error:" + e);
 
 				// renew. potential error is exists and should avoid this error.
 				var endPoint = socketToken.sendArgs.RemoteEndPoint;
@@ -270,7 +277,10 @@ namespace DisquuunCore {
 				socketToken.sendArgs.RemoteEndPoint = endPoint;
 				socketToken.sendArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnSend);
 			}		
-			if (!socketToken.socket.SendAsync(socketToken.sendArgs)) OnSend(socketToken.socket, socketToken.sendArgs); 
+			if (!socketToken.socket.SendAsync(socketToken.sendArgs)) OnSend(socketToken.socket, socketToken.sendArgs);
+			} catch (Exception e1) {
+				Disquuun.Log("StartReceiveAndSendDataAsync count:" + count + " error:" + e1);
+			} 
 		}
 		
 		private void StartCloseAsync () {
@@ -407,7 +417,7 @@ namespace DisquuunCore {
 							case SocketError.ConnectionReset: {
 								// The connection was reset by the remote peer.ってことなんで、Mac側か。
 								// んーーーUbuntu用意するか。
-								Disquuun.Log("ConnectionResetが出てる。なにかできるかな。token.socketState:" + token.socketState, true);
+								Disquuun.Log("ConnectionResetが出てる count:" + count + " token.socketState:" + token.socketState, true);
 								break;
 							}
 							default: {

@@ -145,8 +145,8 @@ public partial class Tests {
 					if (restJobCount != 0) TestLogger.Log("test:" + methodName + " rest job:" + restJobCount, true);
 					else TestLogger.Log("test:" + methodName + " passed. no job exists.", true);
 				} catch (Exception e) {
-					TestLogger.Log("before error.");
-					TestLogger.Log("test:" + methodName + " FAILED by exception:" + e.Message);
+					TestLogger.Log("before error...", true);
+					TestLogger.Log("test:" + methodName + " FAILED by exception:" + e, true);
 				}
 			}
 
@@ -158,9 +158,9 @@ public partial class Tests {
 	}
 	
 	
-	public void WaitUntil (string methodName, Func<bool> WaitFor, int timeoutSec) {
+	public bool WaitUntil (string methodName, Func<bool> WaitFor, int timeoutSec) {
 		var resetEvent = new ManualResetEvent(false);
-		
+		var succeeded = true;
 		var waitingThread = new Thread(
 			() => {
 				resetEvent.Reset();
@@ -173,6 +173,7 @@ public partial class Tests {
 						
 						if (timeoutSec < distanceSeconds) {
 							TestLogger.Log("timeout:" + methodName);
+							succeeded = false;
 							break;
 						}
 						
@@ -189,6 +190,7 @@ public partial class Tests {
 		waitingThread.Start();
 		
 		resetEvent.WaitOne();
+		return succeeded;
 	}
 	
 	public void Assert (string methodName, bool condition, string message) {
@@ -213,7 +215,7 @@ public static class TestLogger {
 				logs.AppendLine(message);
 				return;
 			}
-			
+
 			logPath = "test.log";
 			
 			// file write

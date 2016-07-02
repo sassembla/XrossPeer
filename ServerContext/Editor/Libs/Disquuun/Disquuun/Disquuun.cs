@@ -177,7 +177,7 @@ namespace DisquuunCore {
 				}
 				
 				newSocketCount++;
-				return new DisquuunSocket(endPoint, bufferSize, OnSocketConnectionFailed);
+				return new DisquuunSocket(endPoint, bufferSize, OnSocketConnectionFailed, newSocketCount);
 			}
 		}
 		
