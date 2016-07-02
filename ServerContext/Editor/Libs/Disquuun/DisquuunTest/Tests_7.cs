@@ -128,12 +128,14 @@ public partial class Tests {
 		var addingJobCount = 1000;
 		
 		var connected = false;
-		var disquuun2 = new Disquuun(DisquuunTests.TestDisqueHostStr, DisquuunTests.TestDisquePortNum, 1024, 10,
+		disquuun = new Disquuun(DisquuunTests.TestDisqueHostStr, DisquuunTests.TestDisquePortNum, 1024, 10,
 			disquuunId => {
 				connected = true;
 			},
 			(info, e) => {
-				TestLogger.Log("error, info:" + info + " e:" + e.Message);
+				TestLogger.Log("error, info:" + info + " e:" + e.Message, true);
+				// ここで落とした方が良いんだが、使ってる時は逃げ場がないな〜〜〜
+				// disposableない方が安定するんだろうな〜〜〜〜
 			}
 		);
 		
@@ -145,7 +147,7 @@ public partial class Tests {
 		var queueId = Guid.NewGuid().ToString();
 		
 		for (var i = 0; i < addingJobCount; i++) {
-			disquuun2.AddJob(queueId, new byte[10]).Async(
+			disquuun.AddJob(queueId, new byte[10]).Async(
 				(command, data) => {
 					lock (this) addedCount++;
 				}
@@ -156,13 +158,16 @@ public partial class Tests {
 		var r1 = WaitUntil("r1 _7_1_GetJob1000", () => (addedCount == addingJobCount), 10);
 		if (!r1) return;
 		
+		TestLogger.Log("------------------------------ADDED", true);
+
+
 		var gotJobDataIds = new List<string>();
 		
 		
 		var w = new Stopwatch();
 		w.Start();
 		for (var i = 0; i < addingJobCount; i++) {
-			disquuun2.GetJob(new string[]{queueId}).Async(
+			disquuun.GetJob(new string[]{queueId}).Async(
 				(command, data) => {
 					lock (this) {
 						var jobDatas = DisquuunDeserializer.GetJob(data);
@@ -172,17 +177,17 @@ public partial class Tests {
 				}
 			);
 		}
-		
+
 		var r2 = WaitUntil("r2 _7_1_GetJob1000", () => (gotJobDataIds.Count == addingJobCount), 10);
 		if (!r2) return;
 
 		w.Stop();
-		TestLogger.Log("_7_1_GetJob10000 w:" + w.ElapsedMilliseconds + " tick:" + w.ElapsedTicks);
+		TestLogger.Log("_7_1_GetJob1000 w:" + w.ElapsedMilliseconds + " tick:" + w.ElapsedTicks);
 		
 		var result = DisquuunDeserializer.FastAck(disquuun.FastAck(gotJobDataIds.ToArray()).DEPRICATED_Sync());
 		
 		Assert("_7_1_GetJob1000", addingJobCount, result, "result not match.");
-		disquuun2.Disconnect(true);
+		disquuun.Disconnect(true);
 	}
 	
 	public void _7_1_0_GetJob1000by100Connection (Disquuun disquuun) {

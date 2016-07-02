@@ -29,7 +29,7 @@ public partial class Tests {
 		var tests = new List<Action<Disquuun>>();
 		
 		// basement.
-		// tests.Add(_0_0_InitWith2Connection);
+		tests.Add(_0_0_InitWith2Connection);
 		// tests.Add(_0_0_1_WaitOnOpen2Connection);
 		// tests.Add(_0_0_2_ReadmeSampleSync);
 		// tests.Add(_0_0_3_ReadmeSampleAsync);
@@ -131,13 +131,14 @@ public partial class Tests {
 				var methodName = test.GetType();
 
 				try {
+					TestLogger.Log("tests before.", true);
 					var disquuun = new Disquuun(DisquuunTests.TestDisqueHostStr, DisquuunTests.TestDisquePortNum, 2020008, 2);// this buffer size is just for 100byte job x 10000 then receive 1 GetJob(count 1000).
 					test(disquuun);
 					if (disquuun != null) {
 						disquuun.Disconnect(true);
 						disquuun = null;
 					}
-
+					
 					var info = disquuunForResultInfo.Info().DEPRICATED_Sync();
 					var result = DisquuunDeserializer.Info(info);
 					var restJobCount = result.jobs.registered_jobs;
@@ -146,7 +147,7 @@ public partial class Tests {
 					else TestLogger.Log("test:" + methodName + " passed. no job exists.", true);
 				} catch (Exception e) {
 					TestLogger.Log("before error...", true);
-					TestLogger.Log("test:" + methodName + " FAILED by exception:" + e, true);
+					TestLogger.Log("test:" + methodName + " FAILED by exception:" + e.Message, true);
 				}
 			}
 
@@ -180,7 +181,7 @@ public partial class Tests {
 						System.Threading.Thread.Sleep(10);
 					}
 				} catch (Exception e) {
-					TestLogger.Log("methodName:" + methodName + " error:" + e, true);
+					TestLogger.Log("methodName:" + methodName + " error:" + e.Message, true);
 				}
 				
 				resetEvent.Set();
