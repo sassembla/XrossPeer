@@ -128,7 +128,7 @@ namespace DisquuunCore {
 		
 		private void OnSocketConnectionFailed (DisquuunSocket source, string info, Exception e) {
 			UpdateState();
-			if (ConnectionFailed != null) ConnectionFailed(info, e); 
+			if (ConnectionFailed != null) ConnectionFailed(info + " newSocketCount:" + newSocketCount, e); 
 		}
 		
 		public void UpdateState () {
@@ -164,7 +164,8 @@ namespace DisquuunCore {
 				foreach (var socket in socketPool) socket.Disconnect(force);
 			}
 		}
-		
+		private int newSocketCount = 0;
+
 		private DisquuunSocket ChooseAvailableSocket () {
 			lock (lockObject) {
 				for (var i = 0; i < socketPool.Length; i++) {
@@ -175,6 +176,7 @@ namespace DisquuunCore {
 					}
 				}
 				
+				newSocketCount++;
 				return new DisquuunSocket(endPoint, bufferSize, OnSocketConnectionFailed);
 			}
 		}
@@ -329,10 +331,8 @@ namespace DisquuunCore {
 			return new DisquuunInput(DisqueCommand.PAUSE, bytes, socket);
 		}
 		
-		
-		
-		public static void Log (string message) {
-			// TestLogger.Log(message);
+		public static void Log (string message, bool write=false) {
+			TestLogger.Log(message, write);
 		}
 	}
 }

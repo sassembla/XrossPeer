@@ -17,11 +17,13 @@ namespace DisquuunCore {
 		}
 		
 		public bool IsChoosable () {
+			//  このへんにこのソケット用のlockを入れてしまえばそれでいいんじゃないかという気はする。
 			if (socketToken.socketState == SocketState.OPENED) return true;
 			return false;
 		}
 
 		public void SetBusy () {
+			// このへんもロックしちゃっていいような。
 			socketToken.socketState = SocketState.BUSY;
 		}
 		
@@ -85,23 +87,25 @@ namespace DisquuunCore {
 			this.SocketClosed = SocketClosedAct;
 
 			try {
+				Disquuun.Log("a");
 				var clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+				Disquuun.Log("b-1");
 				clientSocket.NoDelay = true;
-				
+				Disquuun.Log("b");
 				var connectArgs = new SocketAsyncEventArgs();
 				connectArgs.RemoteEndPoint = endPoint;
-				
+				Disquuun.Log("c");
 				var sendArgs = new SocketAsyncEventArgs();
 				sendArgs.RemoteEndPoint = endPoint;
 				sendArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnSend);
-				
+				Disquuun.Log("d");
 				var receiveArgs = new SocketAsyncEventArgs();
 				receiveArgs.RemoteEndPoint = endPoint;
 				receiveArgs.Completed += new EventHandler<SocketAsyncEventArgs>(OnReceived);
-						
+				Disquuun.Log("e");	
 				socketToken = new SocketToken(clientSocket, bufferSize, connectArgs, sendArgs, receiveArgs);
 				socketToken.socketState = SocketState.DISPOSABLE_READY;
-				
+				Disquuun.Log("f");
 				// not start connecting yet.
 			} catch (Exception e) {
 				SocketClosed(this, "failed to create additioal socket.", e);
@@ -399,21 +403,22 @@ namespace DisquuunCore {
 						return;
 					}
 					default: {
-						// show error, then close or continue receiving.
-						Disquuun.Log("onReceive error:" + args.SocketError);
-						// if (Error != null) {
-						// 	var error = new Exception("receive error:" + args.SocketError.ToString() + " size:" + args.BytesTransferred);
-						// 	Error(error);
-						// }
-						
-						// connection is already closed.
-						if (!IsSocketConnected(token.socket)) {
-							Disconnect();
-							return;
+						switch (args.SocketError) {
+							case SocketError.ConnectionReset: {
+								// The connection was reset by the remote peer.ってことなんで、Mac側か。
+								// んーーーUbuntu用意するか。
+								Disquuun.Log("ConnectionResetが出てる。なにかできるかな。token.socketState:" + token.socketState, true);
+								break;
+							}
+							default: {
+								Disquuun.Log("onReceive default token.socketState:" + token.socketState + " error:" + args.SocketError, true);
+								break;
+							}
 						}
+
+						Disconnect();
 						
-						// continue receiving data. go to below.
-						break;
+						return;
 					}
 				}
 			}
