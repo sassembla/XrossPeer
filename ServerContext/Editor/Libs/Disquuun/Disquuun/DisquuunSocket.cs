@@ -441,7 +441,7 @@ namespace DisquuunCore {
 
 						Disconnect();
 
-						var e1 = new Exception("receive status is not good.");
+						var e1 = new Exception("receive status is not good. count:" + count);
 						SocketClosed(this, "failed to receive. count:" + count, e1);
 						return;
 					}

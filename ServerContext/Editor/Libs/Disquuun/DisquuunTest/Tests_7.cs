@@ -125,7 +125,7 @@ public partial class Tests {
 	public void _7_1_GetJob1000 (Disquuun disquuun) {
 		WaitUntil("_7_1_GetJob1000", () => (disquuun.State() == Disquuun.ConnectionState.OPENED), 5);
 		
-		var addingJobCount = 1000;
+		var addingJobCount = 100;
 		
 		var connected = false;
 		disquuun = new Disquuun(DisquuunTests.TestDisqueHostStr, DisquuunTests.TestDisquePortNum, 1024, 10,
