@@ -149,14 +149,12 @@ public partial class Tests {
 		var lockObject = new object();
 
 		for (var i = 0; i < addingJobCount; i++) {
-			TestLogger.Log("------------------------------ADDING i:" + i);
 			disquuun.AddJob(queueId, new byte[10]).Async(
 				(command, data) => {
 					lock (lockObject) addedCount++;
 				}
 			);
 		}
-		TestLogger.Log("------------------------------ADDING2", true);
 		
 		var r1 = WaitUntil("r1 _7_1_GetJob1000", () => (addedCount == addingJobCount), 10);
 		if (!r1) return;
