@@ -111,7 +111,8 @@ namespace DisquuunCore {
 			}
 		}
 		
-		public DisquuunSocket (IPEndPoint endPoint, long bufferSize, Action<DisquuunSocket, string> SocketOpenedAct, Action<DisquuunSocket, string, Exception> SocketClosedAct) {
+		public DisquuunSocket (IPEndPoint endPoint, long bufferSize, Action<DisquuunSocket, string> SocketOpenedAct, Action<DisquuunSocket, string, Exception> SocketClosedAct, int count) {
+			this.count = count;
 			this.socketId = Guid.NewGuid().ToString();
 			
 			this.SocketOpened = SocketOpenedAct;
@@ -439,7 +440,7 @@ namespace DisquuunCore {
 						}
 
 						Disconnect();
-						
+
 						var e1 = new Exception("receive status is not good.");
 						SocketClosed(this, "failed to receive. count:" + count, e1);
 						return;
@@ -578,8 +579,11 @@ namespace DisquuunCore {
 				SocketClosed(this, "failed to receive2. count:" + count, e);
 			}
 		}
-		
+
+		private object lockObject = new object();
+
 		public void Disconnect (bool force=false) {
+			lock (lockObject) {
 			if (force) {
 				try {
 					socketToken.socketState = SocketState.CLOSING;
@@ -605,6 +609,7 @@ namespace DisquuunCore {
 					StartCloseAsync();
 					break;
 				}
+			}
 			}
 		}
 		

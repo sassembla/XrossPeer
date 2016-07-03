@@ -110,7 +110,7 @@ namespace DisquuunCore {
 			this.minConnectionCount = minConnectionCount;
 
 			socketPool = new DisquuunSocket[minConnectionCount];
-			for (var i = 0; i < minConnectionCount; i++) socketPool[i] = new DisquuunSocket(endPoint, bufferSize, OnSocketOpened, OnSocketConnectionFailed);
+			for (var i = 0; i < minConnectionCount; i++) socketPool[i] = new DisquuunSocket(endPoint, bufferSize, OnSocketOpened, OnSocketConnectionFailed, -(i+1));
 		}
 		
 		private void OnSocketOpened (DisquuunSocket source, string socketId) {
@@ -128,7 +128,7 @@ namespace DisquuunCore {
 		
 		private void OnSocketConnectionFailed (DisquuunSocket source, string info, Exception e) {
 			UpdateState();
-			if (ConnectionFailed != null) ConnectionFailed(info + " newSocketCount:" + newSocketCount, e); 
+			if (ConnectionFailed != null) ConnectionFailed("OnSocketConnectionFailed:" + info, e); 
 		}
 		
 		public void UpdateState () {
